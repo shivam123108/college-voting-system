@@ -231,6 +231,9 @@
         </div>
         
         <div id="vote" class="tab-content card">
+            <div style="text-align: right;">
+                <button onclick="logout()">Logout</button>
+            </div>
             <h2>Cast Your Vote</h2>
             <div id="login-prompt" style="text-align: center; display: none;">
                 <p>Please login to vote</p>
@@ -348,7 +351,7 @@
         
         let currentUser = null;
         
-        // Initialize the page
+        // Initialize the page with localStorage check
         function init() {
             renderCandidates();
             updateRemoveCandidateDropdown();
@@ -359,12 +362,22 @@
             candidates[2].votes = 18;
             candidates[3].votes = 12;
             
-            // Hide voting sections and show login prompt until user logs in
-            document.getElementById('cr-section').style.display = 'none';
-            document.getElementById('lr-section').style.display = 'none';
-            document.getElementById('login-prompt').style.display = 'block';
-            
-            showTab('loginRegister');
+            // Check for saved login state
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUI();
+                document.getElementById('login-prompt').style.display = 'none';
+                document.getElementById('cr-section').style.display = 'block';
+                document.getElementById('lr-section').style.display = 'block';
+                showTab(currentUser.role === 'teacher' ? 'admin' : 'vote');
+            } else {
+                // Hide voting sections and show login prompt
+                document.getElementById('cr-section').style.display = 'none';
+                document.getElementById('lr-section').style.display = 'none';
+                document.getElementById('login-prompt').style.display = 'block';
+                showTab('loginRegister');
+            }
         }
         
         // Show the selected tab
@@ -470,8 +483,16 @@
         function closeModal() {
             document.getElementById('thankYouModal').style.display = 'none';
         }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            init(); // Reset the page
+            showTab('loginRegister');
+        }
         
-        // Login function
+        // Login function - saves state in localStorage
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -480,6 +501,8 @@
             
             if (user) {
                 currentUser = user;
+                // Save login state in localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
                 updateUI();
                 document.getElementById('loginMessage').textContent = 'Login successful!';
                 document.getElementById('loginMessage').style.color = 'green';
